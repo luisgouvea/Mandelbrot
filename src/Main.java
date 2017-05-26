@@ -1,6 +1,6 @@
-
-
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main class in the Mandelbrot project.  This will eventually, begin threads to
@@ -11,13 +11,14 @@ public class Main {
 
     /**
      * @param args the command line arguments
+     * @throws InterruptedException 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         // The number of threads to use.  We will use 4 because I have a
         // Quad-core processor.  (Intel i5)
         int numThreads = 4;
         // The threads used in this program
-        Thread[] threads = new Thread[numThreads];
+        //Thread[] threads = new Thread[numThreads];
         // The number of pictures per thread
         int picsPerThread = 3;
         // The names of the files will be mbrot1, mbrot2, etc.
@@ -31,6 +32,8 @@ public class Main {
         double yCenter = -0.665;
         // Number of total iterations
         int maxIterations = 1000;
+        
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
         ColorScheme color = new ColorScheme(maxIterations);
         
@@ -38,7 +41,7 @@ public class Main {
 
         // For the number of threads being used...
         for (int a = 0; a < numThreads; a++) {
-            // Create an array to give to each thread
+        	// Create an array to give to each thread
             MbrotParameter[] mbrots = new MbrotParameter[picsPerThread];
             // For every parameter in the array...
             for (int b = 0; b < picsPerThread; b++) {
@@ -50,22 +53,28 @@ public class Main {
                 resolution += 1000;
             }
             // Create a new thread with the appropriate array as the parameter.
-            threads[a] = new Thread(new MandelbrotRenderer(mbrots, color,
+            executor.execute(new MandelbrotRenderer(mbrots, color,
                     maxIterations));
         }
 
-        // Start the threads
-        for (Thread t : threads) {
-            t.start();
-        }
-
-        // Join the threads
-        for (Thread t : threads) {
-            try {
-                t.join();
-            }
-            catch (Exception e) {}
-        }
+        executor.shutdown();
+        
+//         //Start the threads
+//         for (Thread t : threads) {
+//            t.start();
+//        }
+//
+//        // Join the threads
+//        for (Thread t : threads) {
+//            try {
+//            	
+//                executor.execute(t);
+//            	//executor.execute(arg0);            	
+//            	//t.join();
+//            }
+//            catch (Exception e) {}
+//        }
+//    }
+       executor.awaitTermination(2,TimeUnit.MINUTES);
     }
-
 }
